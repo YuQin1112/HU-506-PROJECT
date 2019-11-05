@@ -17,21 +17,25 @@ def _is_number(x):
         return True
 
 
-def _replace_non_alphanumeric(column):
+def _fix_data_cell(column):
     """
-    Replace cells that contains invalid data to NA for a given column.
-    Data is invalid if a it is not a number and not alphabatical.
+    For each cell in a given column:
+    - Remove unicode if a cell is alphabatical.
+    - Replace cells that contain invalid data with NA.
+
+    Data is invalid if it is not a number and not alphabatical.
     """
     for i in range(len(column)):
-        if isinstance(column[i], str) and not _is_number(column[i]) and not column[i].isalpha():
+        if isinstance(column[i], str) and not _is_number(column[i]):
+            ascii = column[i].encode('utf-8').decode('ascii', 'ignore')
             # TODO replace data instead of messing up with copies.
-            column[i] = NAN
+            column[i] = ascii if ascii.isalpha() else NAN
     return column
 
 
 def read_dataframe(df_csv):
     """
-    Read csv file into pandas dataframe, and fix all unicode.
+    Read csv file into pandas dataframe, and fix column name unicode.
     """
     with open(df_csv, 'r') as csvfile:
         df = pd.read_csv(csvfile, sep=',' , encoding = 'utf-8')
@@ -48,7 +52,7 @@ def replace_invalid_cells(df):
     Process all data and replace invalid data with NA.
     """
     for column in df:
-        df[column].replace(_replace_non_alphanumeric(df[column]))
+        df[column].replace(_fix_data_cell(df[column]))
     return df
 
 
